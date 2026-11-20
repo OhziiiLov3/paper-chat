@@ -1,13 +1,15 @@
 [project]
 name = "paper-chat"
 version = "0.1.0"
-description = "Add your description here"
+description = "This app helps self-taught learners understand ML, DL and LLM papers by simplifying them, answering follow-up questions grounded in the paper, and building a learning plan"
 readme = "README.md"
 authors = [
     { name = "ohziiilov3", email = "klbaskerville0520@gmail.com" }
 ]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "pydantic>=2.14.4",
+]
 
 [project.scripts]
 paper-chat = "paper_chat:main"
@@ -22,8 +24,9 @@ dev = [
     "ruff>=0.17.6",
 ]
 
-pythonpath = ["src"]
+
 [tool.pytest.ini_options] 
+pythonpath = ["src"]
 
 [tool.ruff] 
 line-length = 100
