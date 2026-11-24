@@ -287,7 +287,7 @@ VALID_PAPER = {
 
 VALID_CHUNK = {
     "id": VALID_PAPER["id"] + "_c1",
-    "paper_id": VALID_PAPER["id"],          # chunk → paper
+    "paper_id": VALID_PAPER["id"],  # chunk → paper
     "text": "This is a chunk of text.",
     "index": 0,
 }
@@ -327,8 +327,8 @@ For a failure test, **break the input, then build inside `pytest.raises`**:
 ```python
 def test_chunk_index_wrong_type_raises():
     chunk_data = {**VALID_CHUNK}
-    chunk_data["index"] = "first"           # 1. break the data
-    with pytest.raises(ValidationError):    # 2. build, which should fail
+    chunk_data["index"] = "first"  # 1. break the data
+    with pytest.raises(ValidationError):  # 2. build, which should fail
         Chunk(**chunk_data)
 ```
 
@@ -398,7 +398,7 @@ Plain `pytest.raises` passes on **any** `ValidationError`. To make sure a test f
 ```python
 def test_answer_nested_citation_missing_quote_raises():
     answer_data = {**VALID_ANSWER}
-    answer_data["citations"] = [{"chunk_id": "p1-c0"}]   # no "quote"
+    answer_data["citations"] = [{"chunk_id": "p1-c0"}]  # no "quote"
 
     with pytest.raises(ValidationError) as exc_info:
         Answer(**answer_data)
@@ -433,7 +433,7 @@ answer = Answer.model_validate_json(
     '{"answer": "The paper uses self-attention.", '
     '"citations": [{"chunk_id": "p1-c0", "quote": "This is a chunk"}]}'
 )
-assert isinstance(answer.citations[0], Citation)   # inner dict became a real Citation
+assert isinstance(answer.citations[0], Citation)  # inner dict became a real Citation
 ```
 
 ---

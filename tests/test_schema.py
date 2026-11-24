@@ -187,6 +187,7 @@ def test_plan_step_resource_as_plain_string_raises():
 
 # Test LearningPlan Schema
 
+
 def test_plan_step_builds_with_all_fields():
     step = PlanStep(**VALID_PLAN_STEP)
     assert step.title == VALID_PLAN_STEP["title"]
