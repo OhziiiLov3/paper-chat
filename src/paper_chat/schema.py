@@ -11,7 +11,7 @@ class Paper(BaseModel):
     title: str = Field(description="Title of the paper")
     abstract: str | None = Field(default=None, description="Abstract of the paper")
     source: str = Field(description="Source of the paper (e.g., url or file path)")
-    authors: list[str] = Field(description="List of authors of the paper")
+    authors: list[str] = Field(default_factory=list, description="List of authors of the paper")
     year: int | None = Field(default=None, description="Year of publication")
 
 
@@ -24,7 +24,6 @@ class Chunk(BaseModel):
     paper_id: str = Field(description="Identifier of the paper this chunk belongs to")
     text: str = Field(description="text of the chunk")
     index: int = Field(description="0-based position of the chunk within its paper")
-
 
 
 # === Shared Data Models (reused by several outputs) ===
@@ -57,6 +56,7 @@ class Summary(BaseModel):
     key_points: list[str] = Field(description="List of key points from the paper")
     citations: list[Citation] = Field(description="List of citations from the paper")
 
+
 class Answer(BaseModel):
     """
     Schema for an answer to a question about the paper.
@@ -65,14 +65,18 @@ class Answer(BaseModel):
     answer: str = Field(description="Answer to the question")
     citations: list[Citation] = Field(description="List of citations from the paper")
 
+
 class PlanStep(BaseModel):
     """
-    Schema for a list of steps to achieve a goal related to the paper.
+    Schema for a step to achieve a goal related to the paper.
     """
 
     title: str = Field(description="Title of the step")
     what_to_do: str = Field(description="Description of what to do in this step")
-    resources: list[Resource] = Field(description="List of resources for this step")
+    resources: list[Resource] = Field(
+        default_factory=list, description="List of resources for this step"
+    )
+
 
 class LearningPlan(BaseModel):
     """
@@ -80,8 +84,7 @@ class LearningPlan(BaseModel):
     """
 
     goal: str = Field(description="Goal of the learning plan")
-    steps: list[PlanStep] = Field(description="List of steps to achieve the goal")
-
+    steps: list[PlanStep] = Field(min_length=1, description="List of steps to achieve the goal")
 
 
 # Test code for the Paper model

@@ -1,7 +1,10 @@
-# Paper-Chat
+# RAG-Paper-Chat-v1
+v1 is a semantic RAG build designed as resource and playbook for AI system project recipes, patterns, and shapes.
+**RAG (retrieval-augmented generation)** with LangChain = find relevant text first, then let the model answer from it.
 
 ## App 
-This app helps self-taught learners understand ML, DL and LLM papers by simplifying them, answering follow-up questions grounded in the paper, and building a learning pl
+This app helps self-taught learners understand ML, DL and LLM papers by simplifying them, answering follow-up questions grounded in the paper, and building a learning plan
+
 
 ## Phase 0: Setup Project
 ```bash
@@ -11,12 +14,12 @@ mkdir -p tests data/raw && touch tests/__init__.py data/raw/.gitkeep
 uv add --dev pytest ruff
 ```
 
-# Phase 1: Schemas(Pydantic)
+# Phase 1: Design Schemas(Pydantic)
 ```bash
 uv add pydantic 
 ```
 
-# The idea behind RAG schemas
+### The idea behind RAG schemas
 Data in a RAG app comes in three kinds. Each kind usually needs its own schema:
 
 1. What you store: the paper, plus the chunks you split it into and retrieve later.
@@ -26,4 +29,20 @@ Data in a RAG app comes in three kinds. Each kind usually needs its own schema:
 The simplest setup that works is roughly one small model per item in those lists. Getting it right is mostly about choosing the fields.
 
 - Follow the data through the app. A RAG app does three things: it ingests a paper, retrieves pieces of it, and generates a response. Each stage handles a different kind of thing, and each kind gets a model. Ingesting gives you Paper, retrieving gives you Chunk, and generating gives you the output models
+
+#### Phase 1(a): Test Schemas 
+`test/test_schema.py`
+**Test**:
+- Paper Schema 
+- Chunk Schema
+- Ciatation Schema
+- Answer Schema
+- PlanStep Schema
+- LearningPlan Schema
+run `uv run pytest -v`
+
+# Phase 2: ingest data
+ 1. Load: documents to search
+
+
 
