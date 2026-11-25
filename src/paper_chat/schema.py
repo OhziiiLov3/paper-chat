@@ -22,6 +22,7 @@ class Chunk(BaseModel):
 
     id: str = Field(description="Unique identifier for the chunk")
     paper_id: str = Field(description="Identifier of the paper this chunk belongs to")
+    page : int | None = Field(default=None, description="0-based page number the chunk came from")
     text: str = Field(description="text of the chunk")
     index: int = Field(description="0-based position of the chunk within its paper")
 

@@ -65,19 +65,20 @@ run `uv run pytest -v`
 uv add pypdf langchain-core langchain-text-splitters
 ```
 A Document is text (page_content) plus metadata (where it came from).
-
+Quick manual check (real PDFs)
 ```python
-# Step 1: Load Documents from from data directory
-docs = []
-for pdf_path in sorted(RAW_DIR.glob("*.pdf")):
-    reader = PdfReader(pdf_path)
-    for page_number, page in enumerate(reader.pages):
-        docs.append(
-            Document(
-                page_content=page.extract_text() or "",
-                metadata={"paper_id": pdf_path.stem, "source": pdf_path.name, "page": page_number},
-            )
-        )
+uv run python -c "
+from paper_chat.ingest import load_pdfs
+papers, docs = load_pdfs()
+for p in papers: print(p.model_dump())
+print(len(docs), 'pages')
+print(docs[0].metadata)
+"
+```
+
+### Build store
+```python
+uv run python -m paper_chat.ingest
 ```
 
 
