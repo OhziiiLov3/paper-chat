@@ -1,3 +1,5 @@
+"""Pydantic schemas for the paper_chat module."""
+
 from pydantic import BaseModel, Field
 
 
@@ -22,8 +24,8 @@ class Chunk(BaseModel):
 
     id: str = Field(description="Unique identifier for the chunk")
     paper_id: str = Field(description="Identifier of the paper this chunk belongs to")
-    page : int | None = Field(default=None, description="0-based page number the chunk came from")
-    text: str = Field(description="text of the chunk")
+    page: int | None = Field(default=None, description="0-based page number the chunk came from")
+    text: str = Field(description="Text of the chunk")
     index: int = Field(description="0-based position of the chunk within its paper")
 
 
@@ -86,16 +88,3 @@ class LearningPlan(BaseModel):
 
     goal: str = Field(description="Goal of the learning plan")
     steps: list[PlanStep] = Field(min_length=1, description="List of steps to achieve the goal")
-
-
-# Test code for the Paper model
-# paper = Paper(
-#     id="1",
-#     title="A Comprehensive Study on Machine Learning",
-#     abstract="This paper provides an in-depth analysis of various machine learning algorithms and their applications.",
-#     source="https://example.com/paper1",
-#     authors=["John Doe", "Jane Smith"],
-#     year=2023
-# )
-
-# print(paper.model_dump())

@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-
 from dotenv import load_dotenv
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -26,13 +25,15 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 
 # Step 1: Build Paper + Load Documents from raw data directory
 
-def build_paper(pdf_path: Path, reader : PdfReader) -> Paper:
+
+def build_paper(pdf_path: Path, reader: PdfReader) -> Paper:
     """One Paper per PDF, from the PDF's built-in metadata."""
     meta = reader.metadata
     title = (meta.title if meta else None) or pdf_path.stem
     author_text = (meta.author if meta else None) or ""
     authors = [name.strip() for name in author_text.split(";") if name.strip()]
     return Paper(id=pdf_path.stem, title=title, source=pdf_path.name, authors=authors)
+
 
 def load_pdfs(raw_dir: Path = RAW_DIR) -> tuple[list[Paper], list[Document]]:
     """Return one Paper per PDF and one Document per page."""
@@ -50,13 +51,13 @@ def load_pdfs(raw_dir: Path = RAW_DIR) -> tuple[list[Paper], list[Document]]:
             )
     return papers, docs
 
+
 def save_papers(papers: list[Paper], out_dir: Path = PROCESSED_DIR) -> Path:
     """Write the papers to JSON so rag.py can look up titles without re-reading PDFs."""
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "papers.json"
     path.write_text(json.dumps([p.model_dump() for p in papers], indent=2))
     return path
-
 
 
 # Step 2: Split Docs into chunks
@@ -89,7 +90,6 @@ def split_docs(
 def get_embeddings() -> OpenAIEmbeddings:
     """Get embeddings from OpenAI."""
     return OpenAIEmbeddings(model=EMBEDDING_MODEL)
-
 
 
 def to_documents(chunks: list[Chunk]) -> list[Document]:

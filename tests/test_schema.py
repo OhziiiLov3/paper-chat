@@ -1,9 +1,11 @@
+"""Tests for the Pydantic schemas in paper_chat.schema."""
+
 import pytest
 from pydantic import ValidationError
 
-from paper_chat.schema import Paper, Chunk, Citation, Answer, LearningPlan, PlanStep, Resource
+from paper_chat.schema import Answer, Chunk, Citation, LearningPlan, Paper, PlanStep, Resource
 
-# Shared test data: a complete, valid paper.
+# Shared test data: for Paper, Chunk, Citation, Answer, PlanStep, LearningPlan
 VALID_PAPER = {
     "id": "p1",
     "title": "Sample Paper",
@@ -20,9 +22,9 @@ VALID_CHUNK = {
     "index": 0,
 }
 
-VALID_CITATION = {"chunk_id": VALID_CHUNK["id"], "quote": "This is a about the citation"}
+VALID_CITATION = {"chunk_id": VALID_CHUNK["id"], "quote": "This is about the citation"}
 
-VALID_ANSWER = {"answer": "This is an exmaple of an answer", "citations": [VALID_CITATION]}
+VALID_ANSWER = {"answer": "This is an example of an answer", "citations": [VALID_CITATION]}
 
 
 VALID_RESOURCE = {
@@ -42,9 +44,8 @@ VALID_LEARNING_PLAN = {
     "steps": [VALID_PLAN_STEP],
 }
 
+
 # Test Paper Schema
-
-
 def test_paper_builds_with_all_fields():
     paper = Paper(**VALID_PAPER)
     assert paper.title == "Sample Paper"
@@ -74,8 +75,6 @@ def test_paper_missing_title_raises(field):
 
 
 # Test Chunk Schema
-
-
 def test_chunk_builds_with_all_fields():
 
     chunk_data = {**VALID_CHUNK}
@@ -102,12 +101,10 @@ def test_chunk_missing_index(bad_index):
 
 
 # Test Citation Schema
-
-
 def test_citation_builds_with_all_fields():
     citation = Citation(**VALID_CITATION)
     assert citation.chunk_id == "p1_c1"
-    assert citation.quote == "This is a about the citation"
+    assert citation.quote == "This is about the citation"
 
 
 @pytest.mark.parametrize("field", ["chunk_id", "quote"])
@@ -120,8 +117,6 @@ def test_citation_builds_missing_fields(field):
 
 
 # Test Answer Schema
-
-
 def test_answer_builds_with_all_fields():
     answer_data = {**VALID_ANSWER}
     answer = Answer(**answer_data)
@@ -143,6 +138,8 @@ def test_answer_nested_citation_missing_quote_raises():
 
     with pytest.raises(ValidationError) as exc_info:
         Answer(**answer_data)
+
+    assert exc_info.value.errors()[0]["loc"] == ("citations", 0, "quote")
 
 
 @pytest.mark.parametrize("field", ["answer", "citations"])
@@ -186,34 +183,24 @@ def test_plan_step_resource_as_plain_string_raises():
 
 
 # Test LearningPlan Schema
+def test_learning_plan_builds_with_all_fields():
+    plan = LearningPlan(**VALID_LEARNING_PLAN)
+    assert plan.goal == VALID_LEARNING_PLAN["goal"]
+    assert isinstance(plan.steps[0], PlanStep)
 
 
-def test_plan_step_builds_with_all_fields():
-    step = PlanStep(**VALID_PLAN_STEP)
-    assert step.title == VALID_PLAN_STEP["title"]
-    assert isinstance(step.resources[0], Resource)
-
-
-def test_plan_step_resources_default_to_empty_list():
-    data = {**VALID_PLAN_STEP}
-    del data["resources"]
-
-    step = PlanStep(**data)
-    assert step.resources == []
-
-
-@pytest.mark.parametrize("field", ["title", "what_to_do"])
-def test_plan_step_missing_required_field_raises(field):
-    data = {**VALID_PLAN_STEP}
-    del data[field]
-    with pytest.raises(ValidationError):
-        PlanStep(**data)
-
-
-def test_plan_step_resource_as_plain_string_raises():
-    data = {**VALID_PLAN_STEP, "resources": ["just a title"]}
+def test_learning_plan_with_no_steps_raises():
+    data = {**VALID_LEARNING_PLAN, "steps": []}
 
     with pytest.raises(ValidationError) as exc_info:
-        PlanStep(**data)
+        LearningPlan(**data)
 
-    assert exc_info.value.errors()[0]["loc"] == ("resources", 0)
+    assert exc_info.value.errors()[0]["type"] == "too_short"
+
+
+@pytest.mark.parametrize("field", ["goal", "steps"])
+def test_learning_plan_missing_required_field_raises(field):
+    data = {**VALID_LEARNING_PLAN}
+    del data[field]
+    with pytest.raises(ValidationError):
+        LearningPlan(**data)

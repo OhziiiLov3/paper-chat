@@ -1,3 +1,5 @@
+"""Tests for the ingest module in paper_chat."""
+
 from pathlib import Path
 
 from langchain_core.documents import Document

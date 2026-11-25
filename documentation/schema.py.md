@@ -58,6 +58,17 @@ A RAG app (retrieval-augmented generation: the LLM answers using passages fetche
 
 The "created by" column drives the design. Data your code builds can be trusted. Data the LLM writes cannot, even when it has the right shape.
 
+**Where each model is used today:**
+
+| Model | Built in | Status |
+|---|---|---|
+| `Paper` | `ingest.py` (`build_paper`, one per PDF) | In use, see [ingest.py.md](ingest.py.md) |
+| `Chunk` | `ingest.py` (`split_docs`, one per chunk) | In use |
+| `Answer`, `Citation` | `rag.py` (LLM structured output) | In use |
+| `Summary`, `LearningPlan`, `PlanStep`, `Resource` | Not yet | Planned features |
+
+A schema nobody builds is a contract nobody has agreed to. Either build its feature or move it to a later branch.
+
 ---
 
 ## 3. Optional fields: real data is messy
@@ -98,9 +109,21 @@ A **chunk** is a small piece of a paper's text. RAG searches chunks, not whole p
 class Chunk(BaseModel):
     id: str = Field(description="Unique identifier for the chunk")
     paper_id: str = Field(description="Identifier of the paper this chunk belongs to")
+    page: int | None = Field(default=None, description="0-based page number the chunk came from")
     text: str = Field(description="Text of the chunk")
     index: int = Field(description="0-based position of the chunk within its paper")
 ```
+
+`page` was added once ingestion started building `Chunk` models. Citations need to say *where* in the paper a quote came from. It is optional (`None` by default) because not every source has pages, and that's why the existing 27 schema tests still pass without changes.
+
+**Why it had to be added to the schema:** Pydantic **silently drops fields it doesn't know about**. Real output from a model without a `page` field:
+
+```python
+NoPage(id="x", page=3).model_dump()
+# {'id': 'x'}        ← page is gone, no error
+```
+
+Without the field, `Chunk(..., page=3)` would have lost the page number and nothing would have warned you.
 
 `paper_id` is a **foreign key**: a field that points to another model's `id`. It's what lets a chunk say which paper it came from.
 
@@ -262,8 +285,12 @@ A schema test proves the model accepts what it should and rejects what it should
 Run the tests with:
 
 ```
-uv run pytest -v
+uv run pytest -v                         # all tests (32: 27 schema + 5 ingest)
+uv run pytest -v tests/test_schema.py    # schema tests only
+uv run pytest -v -k chunk                # tests whose name contains "chunk"
 ```
+
+None of them need an API key, so they are safe to run as often as you like, including in CI. The ingest tests check that real pipeline code builds valid `Paper` and `Chunk` models; see [ingest.py.md](ingest.py.md).
 
 `-v` (verbose) lists each test by name with `PASSED` or `FAILED`. This is why test names should state the behavior: the output reads like a description of what the code does. Prefer `-v` to `print()`. A print can say "passed" when nothing was checked, but `PASSED` means every assertion ran.
 
@@ -474,13 +501,16 @@ This check caught a real problem while building these tests. An early "missing f
 - **A test with no `assert` and no `pytest.raises`.** It can never fail.
 - **Duplicate test names.** If two functions in one file share a name, Python keeps only the last one, and pytest silently runs one copy.
 - **Test names that don't match the test.** `test_paper_missing_title_raises` that checks `id`, `title`, and `source` misleads whoever reads the `-v` output.
+- **Passing a field the schema doesn't define.** Pydantic drops it without an error. Add the field to the schema first (as with `Chunk.page`).
+- **Capturing `exc_info` and never checking it.** `with pytest.raises(...) as exc_info:` with no `assert` on `exc_info` afterwards is the same as plain `pytest.raises`: it can pass for the wrong reason.
 
 ## Practice
 1. Write a `Visual` model for the visuals task (hint: `kind`, `code`, `caption`, with Mermaid as the simplest option), then test it with the valid-copy-break pattern.
 2. Write `LearningPlan` tests: one that builds, one where `steps=[]` raises with type `too_short`, and one where a nested step missing `what_to_do` fails at `("steps", 0, "what_to_do")`.
 3. Write `Summary` tests, reusing `VALID_CITATION`.
-4. Write one test that loops over every model's `model_fields` and asserts each field has a `.description`, so a field added later without one fails the build.
-5. Write a function `check_citations(answer, chunks)` that returns citations whose `chunk_id` isn't in `chunks` or whose `quote` isn't in that chunk's `text`, and test it.
+4. Add `Chunk.page` tests: leaving it out gives `None`, and `page="first"` raises `int_parsing`.
+5. Write one test that loops over every model's `model_fields` and asserts each field has a `.description`, so a field added later without one fails the build.
+6. Write a function `check_citations(answer, chunks)` that returns citations whose `chunk_id` isn't in `chunks` or whose `quote` isn't in that chunk's `text`, and test it.
 
 ## Teaching tip
 Show learners the same field with two descriptions, `"An identifier"` and `"Chunk.id of the chunk being cited"`, then print `model_json_schema()` for each. Ask, "If you were the LLM and saw only this, which value would you copy?" It makes clear that descriptions are prompts and not comments. For testing, run a failure test that deletes two fields, then add one back and watch it still pass: learners see immediately why "break exactly one thing" matters.
